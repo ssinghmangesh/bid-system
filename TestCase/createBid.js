@@ -5,8 +5,8 @@ const run = () => {
         method: 'PUT',
         url: 'http://localhost:3000/bid/create',
         data: {
-            name: 'Test bid', 
-            createdAt: new Date(), 
+            name: 'Test bid1', 
+            createdAt: "null", 
             openingPrice:  1000
         }
     })

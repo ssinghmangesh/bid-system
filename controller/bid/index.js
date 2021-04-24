@@ -10,15 +10,24 @@ const fs = require('fs')
 router.put('/create', async (req, res) => {
     try {
         const { name, createdAt, openingPrice } = req.body
+        //step 1: validation
         if(!name || !createdAt || !openingPrice) {
             return res.status(400).send({ message: 'Required fields not found.'})
         }
-
+        if(isNaN(openingPrice)) {
+            return res.status(400).send({ message: 'Opening price should be number.'})
+        }
+        //step 2: check if already exists
         let allBid = require('../../bid.json');
-        
+        let selectedBid = allBid.find(bid => bid.name === name)
+        if(selectedBid) {
+            return res.status(400).send({ message: 'Bid with this name already exists'})
+        }
+
+        //step 3: create new bid
         let newBid = {
             name, 
-            createdAt, 
+            createdAt: isValidDate(new Date(createdAt)) ? new Date(createdAt) : new Date(), 
             openingPrice
         }
 
@@ -28,11 +37,11 @@ router.put('/create', async (req, res) => {
         } else {
             newData = [ newBid ]
         }
-
         fs.writeFileSync('./bid.json', JSON.stringify(newData, null, 4))
 
         return res.status(200).send({ bid: newBid, status: true })
     } catch(e) {
+        console.log(e)
         return res.sendStatus(500)
     }
 
@@ -41,10 +50,15 @@ router.put('/create', async (req, res) => {
 router.post('/make-bid',  async (req, res) => {
     try {
         const { name, price } = req.body
+        //step 1: validation
         if(!name || !price) {
             return res.status(400).send({ message: 'Required fields not found.'})
         }
+        if(isNaN(price)) {
+            return res.status(400).send({ message: 'Price should be number.'})
+        }
 
+        //step 2: search for the bid anf calculate the response
         let allBid = require('../../bid.json');
         let selectedBid = allBid.find(bid => bid.name === name)
         if(selectedBid) {
@@ -65,3 +79,10 @@ router.post('/make-bid',  async (req, res) => {
 
 
 module.exports = router
+
+
+
+
+const isValidDate = (date) => {
+    return date.getTime() === date.getTime();
+};
