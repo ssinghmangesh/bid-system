@@ -60,13 +60,20 @@ router.post('/make-bid',  async (req, res) => {
 
         //step 2: search for the bid anf calculate the response
         let allBid = require('../../bid.json');
-        let selectedBid = allBid.find(bid => bid.name === name)
+        let index = allBid.findIndex(bid => bid.name === name)
+        let selectedBid = allBid[index]
         if(selectedBid) {
-            const { openingPrice } = selectedBid
-            if(openingPrice < price) {
-                return res.status(200).send({ message: 'Your price is higher than opening price.' })
+            const { openingPrice = 0, biggerBid = 0 } = selectedBid
+            if(openingPrice <= price) {
+                if(biggerBid < price) {
+                    allBid[index] = { ...allBid[index], biggerBid: price }
+                    fs.writeFileSync('./bid.json', JSON.stringify(allBid, null, 4))
+                    return res.status(200).send({ message: 'Your bid is accepted' })
+                } else {
+                    return res.status(200).send({ message: 'Your bid is not accepted' })
+                }
             } else {
-                return res.status(201).send({ message: 'Your price is not higher than opening price.' })
+                return res.status(201).send({ message: 'Your price is smaller than opening price.' })
             }
         } else {
             return res.status(400).send({ message: 'No just bid name in system.' })
